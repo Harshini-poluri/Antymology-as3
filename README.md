@@ -1,71 +1,103 @@
-# Assignment 3: Antymology
+# Antymology - Ant Colony Simulation
 
-As we\'ve seen in class, ants exhibit very interesting behaviour. From finding the shortest path to building bridges out of bodies ants have evolved to produce complex emergents from very simple rules. For your assignment you will need to create a species of ant which is capable of generating the biggest nest possible.
-
-I have already created the base code you will use for the assignment. Currently the simulation environment is devoid of any dynamic behaviour and exists only as a landscape. You will need to extend the functionality of what I have written in order to produce \"intelligent\" behaviour. Absolutely no behaviour has been added to this project so you are free to implement whatever you want however you want, with only a few stipulations.
+> CPSC 565 Assignment 3 - Winter 2026
 
 ![Ants](Images/Ants.gif)
 
-## Goal
+---
 
-The only goal you have is to implement some sort of evolutionary algorithm which maximises nest production. You are in complete control over how your ants breed, make choices, and interact with the environment. Because of this, your mark is primarily going to be reflective of how much effort it looks like you put into this vs. how well your agents maximise their fitness (I.e. don\'t worry about having your ants perform exceptionally well).
+## What Is This?
 
-## Current Code
-My code is currently broken into 4 components (found within the components folder)
-1. Agents
-2. Configuration
-3. Terrain
-4. UI
+This is a simulation where a colony of ants try to build the biggest nest they can. There is one queen ant and a bunch of worker ants. The queen is the only one who can make nest blocks, and the workers need to help her survive by finding food and sharing health with her.
 
-You are able to experience it generating an environment by simply running the project once you have loaded it into unity.
+The cool part is that the ants are controlled by a neural network, and I used a genetic algorithm to evolve them over time. So at first the ants just do random stuff, but after a bunch of generations they start to get better at finding food and building nests.
 
-### Agents
-The agents component is currently empty. This is where you will place most of your code. The component will be responsible for moving ants, digging, making nests, etc. You will need to come up with a system for how ants interact within the world, as well as how you will be maximising their fitness (see ant behaviour).
+I built this in Unity using C#. The base world generation code was provided by the instructor (forked from [DaviesCooper/Antymology](https://github.com/DaviesCooper/Antymology)) and I added all the ant behaviour, neural network, and evolution code on top of it.
 
-### Configuration
-This is the component responsible for configuring the system. For example, currently there exists a file called ConfigurationManager which holds the values responsible for world generation such as the dimensions of the world, and the seed used in the RNG. As you build parameters into your system, you will need to place your necesarry configuration components in here.
+---
 
-### Terrain
-The terrain memory, generation, and display all take place in the terrain component. The main WorldManager is responsible for generating everything.
+## How It Works
 
-### UI
-This is where all UI components will go. Currently only a fly camera, and a camera-controlled map editor are present here.
+### The Ants
 
-## Requirements
+Each ant has health that goes down a little bit every step. If their health hits 0 they die and get removed. Ants can eat mulch blocks to get health back, but they have to be standing right on top of the mulch and no other ant can be on the same block.
 
-### Admin
- - This assignment must be implemented using Unity 2019or above (see appendix)
- - Your code must be maintained in a github (or other similar git environment) repository.
- - You must fork from this repo to start your project.
- - You will be marked for your commit messages as well as the frequency with which you commit. Committing everything at once will receive a letter grade reduction (A →A-).
- - All project documentation should be provided via a Readme.md file found in your repo. Write it as if I was an employer who wanted to see a portfolio of your work. By that I mean write it as if I have no idea what the project is. Describe it in detail. Include images/gifs.
+Ants can move in 4 directions (north, south, east, west) but they cant climb more than 2 blocks high. They can also dig blocks to remove them from the world (except container blocks which are indestructible). Standing on acid blocks makes health drain twice as fast.
 
-### Interface
-- The camera must be usable in play-mode so as to allow the grader the ability to look at what is happening in the scene.
-- You must create a basic UI which shows the current number of nest blocks in the world
+The queen ant looks different from the workers - she is a big gold sphere while workers are small brown cubes. The queen can place nest blocks which is how the colony scores points, but each nest costs 1/3 of her max health. Workers can share health with the queen to keep her alive.
 
-### Ant Behaviour
-- Ants must have some measure of health. When an ants health hits 0, it dies and needs to be removed from the simulation
-- Every timestep, you must reduce each ants health by some fixed amount
-- Ants can refill their health by consuming Mulch blocks. To consume a mulch block, and ant must be directly ontop of a mulch block. After consuming, the mulch block must be removed from the world.
-- Ants cannot consume mulch if another ant is also on the same mulch block
-- When moving from one black to another, ants are not allowed to move to a block that is greater than 2 units in height difference
-- Ants are able to dig up parts of the world. To dig up some of the world, an ant must be directly ontop of the block. After digging, the block is removed from the map
-- Ants cannot dig up a block of type ContainerBlock
-- Ants standing on an AcidicBlock will have the rate at which their health decreases multiplied by 2.
-- Ants may give some of their health to other ants occupying the same space (must be a zero-sum exchange)
-- Among your ants must exists a singular queen ant who is responsible for producing nest blocks
-- Producing a single nest block must cost the queen 1/3rd of her maximum health.
-- No new ants can be created during each evaluation phase (you are allowed to create as many ants as you need for each new generation though).
+### Neural Network
 
-## Tips
-Initially you should first come up with some mechanism which each ant uses to interact with the environment. For the beginning phases your ants should behave completely randomly, at least until you have gotten it so that your ants don't break the pre-defined behaviour above.
+Each ant has a small neural network brain that takes in 18 inputs (things like health level, what blocks are nearby, where the queen is, etc) and outputs 9 possible actions. The action with the highest score gets tried first, and if that action is invalid it tries the next one.
 
-Once you have the interaction mechanism nailed down, begin thinking about how you will get your ants to change over time. One approach might be to use a neural network to dictate ant behaviour
+The neural network has one hidden layer with 12 neurons and uses tanh activation. The total number of weights and biases is 345 which is the genome size.
 
-https://youtu.be/zIkBYwdkuTk
+### Evolution / Genetic Algorithm
 
-another approach might be to use phermone deposits (I\'ve commented how you could achieve this in the code for the AirBlock) and have your genes be what action should be taken for different phermone concentrations, etc.
+The simulation runs in generations. Each generation spawns a colony of 25 ants that all share the same base genome (with tiny random variations per ant). They run for up to 1500 steps, and the fitness score is how many nest blocks got placed.
 
-## Submission
-Export your project as a Unity package file. Submit your Unity package file and additional document using the D2L system under the corresponding entry in Assessments/Dropbox. Inlude in the message a link to your git repo where you did your work.
+After each generation, the genome and its score get saved. The best 6 genomes are kept around. To make a new genome for the next generation, I pick two parents using tournament selection (pick 2 random saved genomes, take the better one) and do two-point crossover to mix them. Then each gene has a 15% chance of getting a small random mutation.
+
+Over many generations the ants should get better at surviving and building nests.
+
+### Pheromones
+
+Ants leave pheromone trails as they walk around. When an ant eats mulch (food) it leaves a stronger pheromone mark. The pheromone levels fade over time. The neural network can see pheromone levels in each direction, so evolved ants might learn to follow pheromone trails to find food faster.
+
+---
+
+## Project Structure
+
+```
+Assets/
+├── Components/
+│   ├── Agents/                     <- my code goes here
+│   │   ├── Ant.cs                  # individual ant logic
+│   │   ├── AntColonyManager.cs     # manages the colony and evolution
+│   │   ├── AntGenome.cs            # genome with crossover and mutation
+│   │   └── NeuralNetwork.cs        # simple neural network
+│   ├── Configuration/
+│   │   └── ConfigurationManager.cs # all the settings
+│   ├── Terrain/
+│   │   ├── Blocks/                 # different block types
+│   │   ├── Chunk.cs                # mesh stuff for rendering
+│   │   └── WorldManager.cs         # world generation
+│   └── UI/
+│       ├── FlyCamera.cs            # camera you can fly around with
+│       ├── NestCountUI.cs          # shows stats on screen
+│       └── UITerrainEditor.cs      # block placement tool
+├── Helpers/
+│   ├── CustomMath.cs
+│   ├── NoiseGenerator.cs
+│   └── Singleton.cs
+├── Resources/
+│   ├── blockMaterial.mat
+│   └── tilesheet.png
+└── Scenes/
+    └── SampleScene.unity
+```
+
+---
+
+## How To Run It
+
+1. You need Unity 6000.3.x installed
+2. Clone this repo
+3. Open the project in Unity
+4. Open the scene at `Assets/Scenes/SampleScene.unity`
+5. Hit the Play button
+
+ 
+
+## What I Changed From The Base Code
+
+The base repo from the instructor had the world generation, camera, and terrain editor already done. I added:
+
+- All 4 files in the Agents folder (Ant.cs, AntColonyManager.cs, AntGenome.cs, NeuralNetwork.cs)
+- NestCountUI.cs for showing stats on screen
+- NestBlock.cs for the nest block type
+- Added ant/evolution/neural network settings to ConfigurationManager.cs
+- Changed WorldManager.cs to call my colony manager instead of throwing NotImplementedException
+- Wrapped a MeshUtility call in Chunk.cs with #if UNITY_EDITOR so it builds properly
+
+

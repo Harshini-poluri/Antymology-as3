@@ -1,7 +1,9 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
+#if UNITY_EDITOR
 using UnityEditor;
+#endif
 using UnityEngine;
 
 namespace Antymology.Terrain
@@ -121,7 +123,9 @@ namespace Antymology.Terrain
             mesh.uv = uvs.ToArray();
 
             // Optimize, and normal calculation
+#if UNITY_EDITOR
             MeshUtility.Optimize(mesh);
+#endif
             mesh.RecalculateNormals();
             collider.sharedMesh = mesh;
         }

@@ -1,4 +1,5 @@
-﻿using Antymology.Helpers;
+using Antymology.Helpers;
+using Antymology.Agents;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -84,11 +85,11 @@ namespace Antymology.Terrain
         }
 
         /// <summary>
-        /// TO BE IMPLEMENTED BY YOU
+        /// This starts the ant colony manager which handles spawning ants and running the simulation.
         /// </summary>
         private void GenerateAnts()
         {
-            throw new NotImplementedException();
+            AntColonyManager.Instance.InitializeColony();
         }
 
         #endregion
@@ -156,9 +157,9 @@ namespace Antymology.Terrain
                 WorldXCoordinate < 0 ||
                 WorldYCoordinate < 0 ||
                 WorldZCoordinate < 0 ||
-                WorldXCoordinate > Blocks.GetLength(0) ||
-                WorldYCoordinate > Blocks.GetLength(1) ||
-                WorldZCoordinate > Blocks.GetLength(2)
+                WorldXCoordinate >= Blocks.GetLength(0) ||
+                WorldYCoordinate >= Blocks.GetLength(1) ||
+                WorldZCoordinate >= Blocks.GetLength(2)
             )
             {
                 Debug.Log("Attempted to set a block which didn't exist");
@@ -188,15 +189,15 @@ namespace Antymology.Terrain
                 LocalXCoordinate < 0 ||
                 LocalYCoordinate < 0 ||
                 LocalZCoordinate < 0 ||
-                LocalXCoordinate > Blocks.GetLength(0) ||
-                LocalYCoordinate > Blocks.GetLength(1) ||
-                LocalZCoordinate > Blocks.GetLength(2) ||
+                LocalXCoordinate >= Blocks.GetLength(0) ||
+                LocalYCoordinate >= Blocks.GetLength(1) ||
+                LocalZCoordinate >= Blocks.GetLength(2) ||
                 ChunkXCoordinate < 0 ||
                 ChunkYCoordinate < 0 ||
                 ChunkZCoordinate < 0 ||
-                ChunkXCoordinate > Blocks.GetLength(0) ||
-                ChunkYCoordinate > Blocks.GetLength(1) ||
-                ChunkZCoordinate > Blocks.GetLength(2)
+                ChunkXCoordinate >= Blocks.GetLength(0) ||
+                ChunkYCoordinate >= Blocks.GetLength(1) ||
+                ChunkZCoordinate >= Blocks.GetLength(2)
             )
             {
                 Debug.Log("Attempted to set a block which didn't exist");
@@ -395,7 +396,7 @@ namespace Antymology.Terrain
 
             if (updateZ - 1 >= 0)
                 Chunks[updateX, updateY, updateZ - 1].updateNeeded = true;
-            if (updateX + 1 < Chunks.GetLength(2))
+            if (updateZ + 1 < Chunks.GetLength(2))
                 Chunks[updateX, updateY, updateZ + 1].updateNeeded = true;
         }
 
